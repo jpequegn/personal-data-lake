@@ -33,6 +33,7 @@ class TableEntry:
     last_updated: str = ""
     source: str = ""
     versions: list[SchemaVersion] = field(default_factory=list)
+    metadata: dict = field(default_factory=dict)
 
 
 class Catalog:
@@ -63,6 +64,7 @@ class Catalog:
                 last_updated=entry_data.get("last_updated", ""),
                 source=entry_data.get("source", ""),
                 versions=versions,
+                metadata=entry_data.get("metadata", {}),
             )
 
     def _save(self) -> None:
@@ -82,6 +84,7 @@ class Catalog:
                     }
                     for v in entry.versions
                 ],
+                "metadata": entry.metadata,
             }
         tmp = self.catalog_path.with_suffix(".tmp")
         tmp.write_text(json.dumps(data, indent=2) + "\n")
@@ -151,6 +154,17 @@ class Catalog:
     def has_table(self, name: str) -> bool:
         """Check if a table exists in the catalog."""
         return name in self._tables
+
+    def get_metadata(self, name: str, key: str, default=None):
+        """Get a metadata value for a table."""
+        if name not in self._tables:
+            return default
+        return self._tables[name].metadata.get(key, default)
+
+    def set_metadata(self, name: str, key: str, value) -> None:
+        """Set a metadata value for a table and save."""
+        self._tables[name].metadata[key] = value
+        self._save()
 
     def schema_diff(self, name: str) -> list[tuple[int, list[ColumnDef]]]:
         """Return columns added in each version (beyond v1)."""
