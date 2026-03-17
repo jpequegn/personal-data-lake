@@ -95,5 +95,54 @@ def ingest(source: str, path: str | None, max_commits: int) -> None:
     store.close()
 
 
+@cli.command("query")
+@click.argument("question")
+@click.option("--show-sql", is_flag=True, help="Show the generated SQL query.")
+def query_cmd(question: str, show_sql: bool) -> None:
+    """Ask a natural language question about your data."""
+    from lake.query import QueryEngine
+    from lake.store import LakeStore
+
+    root = _lake_root()
+    store = LakeStore(root)
+    catalog = Catalog(root)
+
+    engine = QueryEngine(store, catalog)
+    result = engine.ask(question)
+
+    if show_sql:
+        click.echo(f"SQL: {result.sql}\n")
+
+    click.echo(result.formatted)
+    store.close()
+
+
+@cli.command()
+@click.argument("sql")
+def sql(sql: str) -> None:
+    """Execute raw SQL against the lake."""
+    from lake.store import LakeStore
+
+    root = _lake_root()
+    store = LakeStore(root)
+
+    try:
+        result = store.query(sql)
+        if len(result) == 0:
+            click.echo("No results.")
+        else:
+            # Print as a simple table
+            rows = result.to_pylist()
+            cols = result.column_names
+            click.echo("  ".join(cols))
+            click.echo("  ".join("-" * len(c) for c in cols))
+            for row in rows:
+                click.echo("  ".join(str(row.get(c, "")) for c in cols))
+    except Exception as e:
+        click.echo(f"Error: {e}")
+    finally:
+        store.close()
+
+
 if __name__ == "__main__":
     cli()
