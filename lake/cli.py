@@ -65,7 +65,7 @@ def schema(table_name: str, diff: bool) -> None:
 
 
 @cli.command()
-@click.option("--source", required=True, type=click.Choice(["git"]), help="Data source to ingest.")
+@click.option("--source", required=True, type=click.Choice(["git", "markdown"]), help="Data source to ingest.")
 @click.option("--path", type=click.Path(exists=True), help="Path to the data source (e.g., repo path for git).")
 @click.option("--max-commits", default=1000, help="Max commits to ingest (git only).")
 def ingest(source: str, path: str | None, max_commits: int) -> None:
@@ -77,13 +77,18 @@ def ingest(source: str, path: str | None, max_commits: int) -> None:
     store = LakeStore(root)
     catalog = Catalog(root)
 
+    if not path:
+        click.echo(f"Error: --path is required for {source} source.")
+        raise SystemExit(1)
+
     if source == "git":
-        if not path:
-            click.echo("Error: --path is required for git source.")
-            raise SystemExit(1)
         from lake.ingestors.git_commits import GitCommitsIngestor
 
         ingestor = GitCommitsIngestor(path, max_commits=max_commits)
+    elif source == "markdown":
+        from lake.ingestors.markdown import MarkdownIngestor
+
+        ingestor = MarkdownIngestor(path)
 
     result = ingestor.ingest(store, catalog)
     click.echo(f"Ingested {result.rows_written} rows into '{result.table_name}' from {result.source}.")
