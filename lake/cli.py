@@ -64,5 +64,31 @@ def schema(table_name: str, diff: bool) -> None:
         click.echo(f"  {col.name:30s} {col.type}{added}")
 
 
+@cli.command()
+@click.option("--source", required=True, type=click.Choice(["git"]), help="Data source to ingest.")
+@click.option("--path", type=click.Path(exists=True), help="Path to the data source (e.g., repo path for git).")
+@click.option("--max-commits", default=1000, help="Max commits to ingest (git only).")
+def ingest(source: str, path: str | None, max_commits: int) -> None:
+    """Ingest data from a source into the lake."""
+    from lake.catalog import Catalog
+    from lake.store import LakeStore
+
+    root = _lake_root()
+    store = LakeStore(root)
+    catalog = Catalog(root)
+
+    if source == "git":
+        if not path:
+            click.echo("Error: --path is required for git source.")
+            raise SystemExit(1)
+        from lake.ingestors.git_commits import GitCommitsIngestor
+
+        ingestor = GitCommitsIngestor(path, max_commits=max_commits)
+
+    result = ingestor.ingest(store, catalog)
+    click.echo(f"Ingested {result.rows_written} rows into '{result.table_name}' from {result.source}.")
+    store.close()
+
+
 if __name__ == "__main__":
     cli()
