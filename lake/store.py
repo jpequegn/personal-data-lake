@@ -62,7 +62,7 @@ class LakeStore:
         parquet_glob = self.raw_path / table_name / "**" / "*.parquet"
         self.conn.execute(
             f"CREATE OR REPLACE VIEW {table_name} AS "
-            f"SELECT * FROM read_parquet('{parquet_glob}', hive_partitioning=true)"
+            f"SELECT * FROM read_parquet('{parquet_glob}', hive_partitioning=true, union_by_name=true)"
         )
 
     def _register_existing_views(self) -> None:
