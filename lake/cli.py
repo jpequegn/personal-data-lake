@@ -152,7 +152,7 @@ def schema(table_name: str, diff: bool) -> None:
 
 
 @cli.command()
-@click.option("--source", type=click.Choice(["git", "markdown"]), help="Data source to ingest.")
+@click.option("--source", type=click.Choice(["git", "markdown", "p3"]), help="Data source to ingest.")
 @click.option("--path", type=click.Path(exists=True), help="Path to the data source.")
 @click.option("--max-commits", default=1000, help="Max commits to ingest (git only).")
 @click.option("--all", "ingest_all", is_flag=True, help="Run all configured sources.")
@@ -185,6 +185,10 @@ def ingest(source: str | None, path: str | None, max_commits: int, ingest_all: b
         from lake.ingestors.markdown import MarkdownIngestor
 
         ingestor = MarkdownIngestor(path)
+    elif source == "p3":
+        from lake.ingestors.p3_podcasts import P3PodcastsIngestor
+
+        ingestor = P3PodcastsIngestor(path)
 
     result = ingestor.ingest(store, catalog)
     click.echo(f"Ingested {result.rows_written} rows into '{result.table_name}' from {result.source}.")
@@ -283,6 +287,10 @@ def _ingest_all(store, catalog, max_commits: int) -> None:
             from lake.ingestors.markdown import MarkdownIngestor
 
             ingestor = MarkdownIngestor(src_path)
+        elif src_type == "p3":
+            from lake.ingestors.p3_podcasts import P3PodcastsIngestor
+
+            ingestor = P3PodcastsIngestor(src_path)
         else:
             click.echo(f"Unknown source type: {src_type}")
             continue
