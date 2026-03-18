@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "question": "How many podcast episodes are in the lake?",
+    "ground_truth_sql": "SELECT COUNT(*) AS count FROM podcasts",
+    "category": "simple_count"
+  },
+  {
+    "id": 2,
+    "question": "Count episodes per podcast, sorted by most to least",
+    "ground_truth_sql": "SELECT podcast_name, COUNT(*) AS episode_count FROM podcasts GROUP BY podcast_name ORDER BY episode_count DESC",
+    "category": "group_by"
+  },
+  {
+    "id": 3,
+    "question": "Find all episodes that mentioned Anthropic",
+    "ground_truth_sql": "SELECT title, podcast_name, date FROM podcasts WHERE companies_mentioned LIKE '%Anthropic%' ORDER BY date DESC",
+    "category": "text_filter"
+  },
+  {
+    "id": 4,
+    "question": "What were the most recent 5 podcast episodes?",
+    "ground_truth_sql": "SELECT title, podcast_name, date FROM podcasts ORDER BY date DESC LIMIT 5",
+    "category": "sort_limit"
+  },
+  {
+    "id": 5,
+    "question": "Which podcast did I listen to most in March 2026?",
+    "ground_truth_sql": "SELECT podcast_name, COUNT(*) AS episode_count FROM podcasts WHERE date >= '2026-03-01' AND date < '2026-04-01' GROUP BY podcast_name ORDER BY episode_count DESC LIMIT 1",
+    "category": "date_filter_group"
+  },
+  {
+    "id": 6,
+    "question": "Show episodes where the full summary contains the word durable",
+    "ground_truth_sql": "SELECT title, podcast_name, date FROM podcasts WHERE lower(full_summary) LIKE '%durable%'",
+    "category": "text_search"
+  },
+  {
+    "id": 7,
+    "question": "What are the top 5 most-committed repos?",
+    "ground_truth_sql": "SELECT repo_name, COUNT(*) AS commit_count FROM commits GROUP BY repo_name ORDER BY commit_count DESC LIMIT 5",
+    "category": "group_by"
+  },
+  {
+    "id": 8,
+    "question": "Show me the last 5 commit messages",
+    "ground_truth_sql": "SELECT message, repo_name, date FROM commits ORDER BY date DESC LIMIT 5",
+    "category": "sort_limit"
+  },
+  {
+    "id": 9,
+    "question": "How many commits did I make in March 2026?",
+    "ground_truth_sql": "SELECT COUNT(*) AS count FROM commits WHERE date >= '2026-03-01' AND date < '2026-04-01'",
+    "category": "date_filter"
+  },
+  {
+    "id": 10,
+    "question": "Which repos had the most insertions?",
+    "ground_truth_sql": "SELECT repo_name, SUM(insertions) AS total_insertions FROM commits GROUP BY repo_name ORDER BY total_insertions DESC",
+    "category": "aggregation"
+  },
+  {
+    "id": 11,
+    "question": "Which notes mention embeddings?",
+    "ground_truth_sql": "SELECT title, word_count FROM notes WHERE lower(content) LIKE '%embeddings%'",
+    "category": "text_search"
+  },
+  {
+    "id": 12,
+    "question": "What are my longest notes by word count?",
+    "ground_truth_sql": "SELECT title, word_count FROM notes ORDER BY word_count DESC LIMIT 10",
+    "category": "sort_limit"
+  },
+  {
+    "id": 13,
+    "question": "How many notes do I have?",
+    "ground_truth_sql": "SELECT COUNT(*) AS count FROM notes",
+    "category": "simple_count"
+  },
+  {
+    "id": 14,
+    "question": "Find notes tagged with AI",
+    "ground_truth_sql": "SELECT title, tags FROM notes WHERE tags LIKE '%ai%' OR tags LIKE '%AI%'",
+    "category": "json_filter"
+  },
+  {
+    "id": 15,
+    "question": "What is the total word count across all notes?",
+    "ground_truth_sql": "SELECT SUM(word_count) AS total_words FROM notes",
+    "category": "aggregation"
+  },
+  {
+    "id": 16,
+    "question": "How many tables are in the lake and how many rows in each?",
+    "ground_truth_sql": "SELECT 'podcasts' AS table_name, COUNT(*) AS rows FROM podcasts UNION ALL SELECT 'commits', COUNT(*) FROM commits UNION ALL SELECT 'notes', COUNT(*) FROM notes",
+    "category": "multi_table"
+  },
+  {
+    "id": 17,
+    "question": "Which authors have the most commits?",
+    "ground_truth_sql": "SELECT author, COUNT(*) AS commit_count FROM commits GROUP BY author ORDER BY commit_count DESC",
+    "category": "group_by"
+  },
+  {
+    "id": 18,
+    "question": "Show podcast episodes from the first week of March 2026",
+    "ground_truth_sql": "SELECT title, podcast_name, date FROM podcasts WHERE date >= '2026-03-01' AND date <= '2026-03-07' ORDER BY date",
+    "category": "date_range"
+  },
+  {
+    "id": 19,
+    "question": "What is the average number of insertions per commit by repo?",
+    "ground_truth_sql": "SELECT repo_name, AVG(insertions) AS avg_insertions FROM commits GROUP BY repo_name ORDER BY avg_insertions DESC",
+    "category": "aggregation"
+  },
+  {
+    "id": 20,
+    "question": "Find episodes with more than one company mentioned",
+    "ground_truth_sql": "SELECT title, companies_mentioned FROM podcasts WHERE companies_mentioned != '[]' AND companies_mentioned LIKE '%,%'",
+    "category": "json_complex"
+  }
+]
