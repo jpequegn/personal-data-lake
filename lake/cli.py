@@ -252,6 +252,43 @@ def sql(sql: str) -> None:
         store.close()
 
 
+@cli.command()
+@click.option("--days", default=7, help="Number of days to look back.")
+@click.option("--history", is_flag=True, help="List past briefs.")
+def brief(days: int, history: bool) -> None:
+    """Generate an AI intelligence brief across all data sources."""
+    from lake.brief import BriefEngine
+    from lake.store import LakeStore
+
+    root = _lake_root()
+
+    if history:
+        engine = BriefEngine.__new__(BriefEngine)
+        briefs = engine.list_briefs(root)
+        if not briefs:
+            click.echo("No briefs yet. Run `lake brief` to generate one.")
+            return
+        console.print("[bold]Past Briefs[/bold]\n")
+        for path in briefs:
+            console.print(f"  {path.stem}  ({_format_bytes(path.stat().st_size)})")
+        return
+
+    store = LakeStore(root)
+    catalog = Catalog(root)
+    engine = BriefEngine(store, catalog)
+
+    console.print(f"[dim]Generating {days}-day brief...[/dim]\n")
+    result = engine.generate(days=days)
+
+    console.print(result.content)
+
+    # Save to disk
+    filepath = engine.save(result, root)
+    console.print(f"\n[dim]Brief saved to {filepath}[/dim]")
+
+    store.close()
+
+
 # --- Helpers ---
 
 
